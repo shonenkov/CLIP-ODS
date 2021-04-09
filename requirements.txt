@@ -1,0 +1,7 @@
+ftfy~=5.9
+regex~=2021.4.4
+tqdm~=4.60.0
+torch~=1.7.1
+torchvision~=0.8.2
+gdown~=3.12.2
+ensemble-boxes~=1.0.6
