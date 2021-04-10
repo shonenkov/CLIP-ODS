@@ -58,7 +58,7 @@ class CLIPDetectorV0:
 
     def detect_by_text(
             self, search_texts, coords, anchor_features, image_path,
-            *, iou_thr=0.01, skip_box_thr=0.1, proba_thr=0.95,
+            *, iou_thr=0.01, skip_box_thr=0.1, proba_thr=0.65,
     ):
         zeroshot_weights = []
         with torch.no_grad():
@@ -79,7 +79,7 @@ class CLIPDetectorV0:
 
         probas = probas.cpu().numpy()
         probas = probas - np.min(probas)
-        probas = probas / np.max(probas)
+        probas = probas / max(0.2, np.max(probas))
 
         img = Image.open(image_path)
 
