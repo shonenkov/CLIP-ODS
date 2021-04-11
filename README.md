@@ -54,10 +54,14 @@ plt.figure(num=None, figsize=(8, 8), dpi=120, facecolor='w', edgecolor='k')
 plt.imshow(res_img);
 ```
 
-
-
 ## Authors:
 
 - [Alex Shonenkov](https://www.kaggle.com/shonenkov)
 - [Sergey Shtekhin](https://www.kaggle.com/shse77)
 - [Denis Karachev](https://github.com/thedenk/)
+
+## Supported by:
+- [OCRV](http://www.ocrv.ru/)
+- [RZD](https://eng.rzd.ru/)
+
+
