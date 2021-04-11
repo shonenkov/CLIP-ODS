@@ -5,7 +5,7 @@ import numpy as np
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader, SequentialSampler
 from ensemble_boxes import weighted_boxes_fusion
-from PIL import Image, ImageDraw
+from PIL import ImageDraw
 
 from .utils import IMAGENET_TEMPLATES
 from . import clip
@@ -76,7 +76,7 @@ class CLIPDetectorV0:
         :param fp_thr: threshold of false positive query, uses for full size image
         :param iou_thr: parameter for ensemble boxes using WBF, see https://github.com/ZFTurbo/Weighted-Boxes-Fusion
         :param skip_box_thr: parameter for ensemble boxes using WBF, see https://github.com/ZFTurbo/Weighted-Boxes-Fusion
-        :return:
+        :return: (img, result, thr)
         """
         zeroshot_weights = []
         with torch.no_grad():
@@ -119,7 +119,7 @@ class CLIPDetectorV0:
                     scores_list.append(proba)
                     labels_list.append(1)
             else:
-                if thr > 0.0:
+                if thr > tp_thr:
                     best_index, proba = indexes[0], probas[0]
                     x1, y1, x2, y2 = list(coords[best_index])
                     x1 /= w
