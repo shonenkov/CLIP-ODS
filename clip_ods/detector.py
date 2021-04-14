@@ -106,10 +106,7 @@ class CLIPDetectorV0:
             if thr_indexes.shape[0] != 0:
                 for best_index, proba in zip(indexes[thr_indexes], probas[thr_indexes]):
                     x1, y1, x2, y2 = list(coords[best_index])
-                    x1 /= w
-                    x2 /= w
-                    y1 /= h
-                    y2 /= h
+                    x1, y1, x2, y2 = max(x1 / w, 0.0), max(y1 / h, 0.0), min(x2 / w, 1.0), min(y2 / h, 1.0)
                     boxes_list.append([x1, y1, x2, y2])
                     scores_list.append(proba)
                     labels_list.append(1)
@@ -117,10 +114,7 @@ class CLIPDetectorV0:
                 if thr > tp_thr:
                     best_index, proba = indexes[0], probas[0]
                     x1, y1, x2, y2 = list(coords[best_index])
-                    x1 /= w
-                    x2 /= w
-                    y1 /= h
-                    y2 /= h
+                    x1, y1, x2, y2 = max(x1 / w, 0.0), max(y1 / h, 0.0), min(x2 / w, 1.0), min(y2 / h, 1.0)
                     boxes_list.append([x1, y1, x2, y2])
                     scores_list.append(proba)
                     labels_list.append(1)

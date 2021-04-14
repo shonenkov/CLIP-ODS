@@ -95,20 +95,14 @@ def get_anchor_coords(img, count_w, count_h):
     h_coords = np.arange(0, image_h + step_h, step_h)
 
     coords = []
-    images = []
-
     for x1, x2 in zip(w_coords[:-1], w_coords[1:]):
         x1, x2 = min(x1, image_w), min(x2, image_w)
         for y1, y2 in zip(h_coords[:-1], h_coords[1:]):
             y1, y2 = min(y1, image_h), min(y2, image_h)
-            coords.append((x1, y1, x2, y2))
-            images.append(img.crop((x1, y1, x2, y2)))
-
             anchor_w = (x2 - x1) / 2
             anchor_h = (y2 - y1) / 2
             anchor_xc = (x2 + x1) // 2
             anchor_yc = (y2 + y1) // 2
-
             for coef_x, coef_y in [
                 (1, 1),
                 (2, 2),
