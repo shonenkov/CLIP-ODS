@@ -60,7 +60,7 @@ class CLIPDetectorV0:
         return torch.vstack(anchor_features)
 
     def detect_by_text(
-            self, texts, img, coords, anchor_features, *, tp_thr=0.0, fp_thr=-0.5, iou_thr=0.01, skip_box_thr=0.8,
+            self, texts, img, coords, anchor_features, *, tp_thr=0.0, fp_thr=-2.0, iou_thr=0.01, skip_box_thr=0.8,
     ):
         """
         :param texts: list of text query
