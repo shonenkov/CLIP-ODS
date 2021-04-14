@@ -12,7 +12,7 @@ from . import clip
 class AnchorImageDataset(Dataset):
 
     def __init__(self, image, coords, transforms):
-        self.image = image
+        self.image = image.copy()
         self.coords = coords
         self.transforms = transforms
 
