@@ -39,7 +39,8 @@ img_path = 'example5.png'
 gdown.download(f'https://drive.google.com/uc?id=1nMPyWquE7U7_fuh0Rk4ZGgeWAtCFEqi8', './', quiet=True);
 
 img = Image.open(img_path)
-coords = get_anchor_coords(img, count_w=COUNT_W, count_h=COUNT_H)
+image_w, image_h = img.size
+coords = get_anchor_coords(image_w, image_h, count_w=COUNT_W, count_h=COUNT_H)
 anchor_features = clip_detector.get_anchor_features(img, coords)
 ```
 ```python
@@ -48,7 +49,7 @@ res_img, res, _ = clip_detector.detect_by_text(
     coords=coords,
     anchor_features=anchor_features,
     img=Image.open(img_path),
-    proba_thr=0.8
+    skip_box_thr=0.8,
 )
 plt.figure(num=None, figsize=(8, 8), dpi=120, facecolor='w', edgecolor='k')
 plt.imshow(res_img);

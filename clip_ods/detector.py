@@ -1,5 +1,3 @@
-from os.path import dirname, join, abspath
-
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -14,7 +12,7 @@ from . import clip
 class AnchorImageDataset(Dataset):
 
     def __init__(self, image, coords, transforms):
-        self.image = image
+        self.image = image.copy()
         self.coords = coords
         self.transforms = transforms
 
@@ -37,9 +35,8 @@ class CLIPDetectorV0:
         self.transforms = transforms
         self.model.to(device)
         self.model.eval()
-        self.zero_text_embeddings = torch.load(
-            join(dirname(abspath(__file__)), "resources/zero_text_embeddings.pt"),
-            map_location=device
+        self.zero_text_embeddings = self.model.encode_text(
+            clip.tokenize([template.format('') for template in IMAGENET_TEMPLATES]).to(self.device)
         )
 
     def get_anchor_features(self, img, coords, bs=32, quite=False):
@@ -63,15 +60,13 @@ class CLIPDetectorV0:
         return torch.vstack(anchor_features)
 
     def detect_by_text(
-            self, texts, img, coords, anchor_features,
-            *, proba_thr=0.8, tp_thr=0.0, fp_thr=-0.5, iou_thr=0.01, skip_box_thr=0.1,
+            self, texts, img, coords, anchor_features, *, tp_thr=0.0, fp_thr=-2.0, iou_thr=0.01, skip_box_thr=0.8,
     ):
         """
         :param texts: list of text query
         :param img: PIL of raw image
         :param coords: list of anchor coords Pascal/VOC format [[x1,y1,x2,y2], ...]
         :param anchor_features: pt tensor with anchor features of image
-        :param proba_thr: threshold of relevant anchors
         :param tp_thr: threshold of true positive query, uses for full size image
         :param fp_thr: threshold of false positive query, uses for full size image
         :param iou_thr: parameter for ensemble boxes using WBF, see https://github.com/ZFTurbo/Weighted-Boxes-Fusion
@@ -88,15 +83,15 @@ class CLIPDetectorV0:
             text_embeddings = torch.stack(text_embeddings).mean(0)
             text_embeddings -= self.zero_text_embeddings
             text_embeddings /= text_embeddings.norm(dim=-1, keepdim=True)
-            text_embedding = text_embeddings.mean(dim=0)
-            text_embedding /= text_embedding.norm()
+            text_embeddings = text_embeddings.mean(dim=0)
+            text_embeddings /= text_embeddings.norm()
 
-            zeroshot_weights.append(text_embedding)
+            zeroshot_weights.append(text_embeddings)
             zeroshot_weights = torch.stack(zeroshot_weights, dim=1).to(self.device)
             logits = (anchor_features @ zeroshot_weights).reshape(-1)
             probas, indexes = torch.sort(logits, descending=True)
 
-            img_features = self.model.encode_image(self.transforms(img).unsqueeze(0)).squeeze(0)
+            img_features = self.model.encode_image(self.transforms(img).unsqueeze(0).to(self.device)).squeeze(0)
             thr = (img_features @ zeroshot_weights)[0].item()
 
         w, h = img.size
@@ -106,15 +101,12 @@ class CLIPDetectorV0:
         probas = probas.cpu().numpy()
         probas = probas - np.min(probas)
         probas = probas / max(0.2, np.max(probas))
-        thr_indexes, = np.where(probas > proba_thr)
+        thr_indexes, = np.where(probas > skip_box_thr)
         if thr > fp_thr:
             if thr_indexes.shape[0] != 0:
                 for best_index, proba in zip(indexes[thr_indexes], probas[thr_indexes]):
                     x1, y1, x2, y2 = list(coords[best_index])
-                    x1 /= w
-                    x2 /= w
-                    y1 /= h
-                    y2 /= h
+                    x1, y1, x2, y2 = max(x1 / w, 0.0), max(y1 / h, 0.0), min(x2 / w, 1.0), min(y2 / h, 1.0)
                     boxes_list.append([x1, y1, x2, y2])
                     scores_list.append(proba)
                     labels_list.append(1)
@@ -122,10 +114,7 @@ class CLIPDetectorV0:
                 if thr > tp_thr:
                     best_index, proba = indexes[0], probas[0]
                     x1, y1, x2, y2 = list(coords[best_index])
-                    x1 /= w
-                    x2 /= w
-                    y1 /= h
-                    y2 /= h
+                    x1, y1, x2, y2 = max(x1 / w, 0.0), max(y1 / h, 0.0), min(x2 / w, 1.0), min(y2 / h, 1.0)
                     boxes_list.append([x1, y1, x2, y2])
                     scores_list.append(proba)
                     labels_list.append(1)
@@ -135,11 +124,12 @@ class CLIPDetectorV0:
             weights=None, iou_thr=iou_thr, skip_box_thr=skip_box_thr
         )
 
-        result = {'boxes': [], 'scores': scores, 'labels': labels}
-        for box in boxes:
-            x1, y1, x2, y2 = box
+        result = {'boxes': [], 'scores': [], 'labels': []}
+        for (x1, y1, x2, y2), score, label in zip(boxes, scores, labels):
             x1, y1, x2, y2 = int(x1*w), int(y1*h), int(x2*w), int(y2*h)
             result['boxes'].append([x1, y1, x2, y2])
+            result['scores'].append(float(score))
+            result['labels'].append(int(label))
             draw = ImageDraw.Draw(img)
             draw.rectangle((x1, y1, x2, y2), width=2, outline=(0, 0, 255))
         return img, result, thr
