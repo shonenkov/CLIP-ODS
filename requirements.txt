@@ -5,3 +5,4 @@ torch~=1.7.1
 torchvision~=0.8.2
 gdown~=3.12.2
 ensemble-boxes~=1.0.6
+opencv-python~=4.5.1.48
