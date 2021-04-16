@@ -1,15 +1,15 @@
 
-## [CLIP ODS] CLIP Object Detection & ~~Segmentation~~
+## [CLIP ODS] CLIP Object Detection & Segmentation
 
 This repo is about a simple add-on over [CLIP by OpenAI](https://openai.com/blog/clip/) for Unsupervised Object Detection (Zeroshot).
-You can search bounding boxes of objects using NATURAL LANGUAGE UNDERSTANDING - no classes, only text.
+You can search bounding boxes and some regions of objects using NATURAL LANGUAGE UNDERSTANDING - no classes, only text.
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/13B9B1N_nPw1p8e5--F5MoLiXuJoKDKZN?usp=sharing)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1273xNBDcbc4XGjJnnB3V8YoYU9aIcBIB?usp=sharing)
 
-![](./pics/example-rzhd.png)
-
-![](./pics/example-detection.png)
-
+![](./pics/example-street-v1.png)
+![](./pics/example-dog-v1.png)
+![](./pics/example-dog-segm-v1.png)
+![](./pics/example-rzhd-segm-v1.png)
 
 
 ## INSTALLING
@@ -18,42 +18,14 @@ You can search bounding boxes of objects using NATURAL LANGUAGE UNDERSTANDING - 
 pip install clip_ods
 ```
 
+## Minimal Examples 
+- **ClipDetectionV0:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/13B9B1N_nPw1p8e5--F5MoLiXuJoKDKZN?usp=sharing)
+- **ClipDetectionV1 (with simple segmentation):** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1273xNBDcbc4XGjJnnB3V8YoYU9aIcBIB?usp=sharing)
 
-## Minimal Example [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/13B9B1N_nPw1p8e5--F5MoLiXuJoKDKZN?usp=sharing)
+## V0:
 
-```python
-import torch
-import gdown
-import matplotlib.pyplot as plt
-from PIL import Image
-from clip_ods import clip, CLIPDetectorV0
-from clip_ods.utils import get_anchor_coords
-
-COUNT_W, COUNT_H = 13, 13
-
-device = torch.device('cuda:0')
-model, preprocess = clip.load("RN50x4", device=device)
-clip_detector = CLIPDetectorV0(model, preprocess, device)
-
-img_path = 'example5.png'
-gdown.download(f'https://drive.google.com/uc?id=1nMPyWquE7U7_fuh0Rk4ZGgeWAtCFEqi8', './', quiet=True);
-
-img = Image.open(img_path)
-image_w, image_h = img.size
-coords = get_anchor_coords(image_w, image_h, count_w=COUNT_W, count_h=COUNT_H)
-anchor_features = clip_detector.get_anchor_features(img, coords)
-```
-```python
-res_img, res, _ = clip_detector.detect_by_text(
-    texts=['green leaves', 'leaves', 'foliage', 'green foliage'],
-    coords=coords,
-    anchor_features=anchor_features,
-    img=Image.open(img_path),
-    skip_box_thr=0.8,
-)
-plt.figure(num=None, figsize=(8, 8), dpi=120, facecolor='w', edgecolor='k')
-plt.imshow(res_img);
-```
+![](./pics/example-rzhd.png)
+![](./pics/example-detection.png)
 
 ## Authors:
 
